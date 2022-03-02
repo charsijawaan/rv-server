@@ -4,6 +4,7 @@ const mongoose = require('mongoose')
 const Tenant = require('./../models/Tenant.model')
 const CreditCard = require('./../models/CreditCard.model')
 const Payment = require('./../models/Payments.model')
+const Reservation = require('./../models/Reservation.model')
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 
 router.post('/add_new_card', async (req, res) => {
@@ -65,18 +66,21 @@ router.get('/get_cards', async (req, res) => {
 })
 
 router.post('/reserve', async (req, res) => {
-	const { camperId, siteId, camperCreditCard, createdBy } = req.body
-	const tenantAccount = 'acct_1KUFrCR4VvHbKTWm'
+	const { camperId, tenantId, siteId, startDate, endDate, camperCreditCard, notes, createdBy } =
+		req.body
 
-	const site = await Tenant.findOne({}).select({
+	const tenantAccount = 'acct_1KUFrCR4VvHbKTWm'
+	let site = await Tenant.findOne({}).select({
 		sites: {
 			$elemMatch: {
 				_id: mongoose.Types.ObjectId(siteId),
 			},
 		},
 	})
+	site = site.sites[0]
 
 	try {
+		// Cut Payment First
 		const token = await stripe.tokens.create(
 			{
 				customer: camperCreditCard.stripeCustomerId,
@@ -95,7 +99,7 @@ router.post('/reserve', async (req, res) => {
 			}
 		)
 
-		const amount = Number(site.sites[0].rate) * 100
+		const amount = Number(site.rate) * 100
 		const paymentIntent = await stripe.paymentIntents.create(
 			{
 				amount: amount,
@@ -116,7 +120,18 @@ router.post('/reserve', async (req, res) => {
 		})
 		await payment.save()
 
-		//
+		// Reserve Site After Payment is Done
+		const reservation = new Reservation({
+			tenantId,
+			camperId,
+			siteId,
+			arrivalDate: startDate,
+			departureDate: endDate,
+			notes,
+			createdBy,
+			siteStatusLookupId: 2,
+		})
+		await reservation.save()
 
 		res.status(200).json({
 			message: 'Reservation Successful',

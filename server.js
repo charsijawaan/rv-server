@@ -23,6 +23,7 @@ app.use(express.json())
 app.use('/auth', require('./routes/auth.route'))
 app.use('/tenant', require('./routes/tenant.route'))
 app.use('/camper', require('./routes/camper.route'))
+app.use('/site', require('./routes/site.route'))
 
 app.listen(port, () => {
 	console.log(`Server listening on port ${port}`)
