@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const paymentSchema = require('./Payments.model').paymentSchema
 const Schema = mongoose.Schema
 
 const reservationSchema = new Schema(
@@ -27,6 +28,7 @@ const reservationSchema = new Schema(
 		siteStatusLookupId: {
 			type: Number,
 		},
+		payments: [paymentSchema],
 	},
 	{
 		timestamps: true,

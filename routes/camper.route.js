@@ -3,7 +3,7 @@ const router = express.Router()
 const mongoose = require('mongoose')
 const Tenant = require('./../models/Tenant.model')
 const CreditCard = require('./../models/CreditCard.model')
-const Payment = require('./../models/Payments.model')
+const Payment = require('./../models/Payments.model').Payment
 const Reservation = require('./../models/Reservation.model')
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 
@@ -118,7 +118,6 @@ router.post('/reserve', async (req, res) => {
 		const payment = new Payment({
 			details: paymentIntent,
 		})
-		await payment.save()
 
 		// Reserve Site After Payment is Done
 		const reservation = new Reservation({
@@ -130,6 +129,7 @@ router.post('/reserve', async (req, res) => {
 			notes,
 			createdBy,
 			siteStatusLookupId: 2,
+			payments: payment,
 		})
 		await reservation.save()
 
