@@ -6,6 +6,7 @@ const reservationSchema = new Schema(
 	{
 		tenantId: {
 			type: mongoose.Types.ObjectId,
+			ref: 'Tenant',
 		},
 		camperId: {
 			type: mongoose.Types.ObjectId,

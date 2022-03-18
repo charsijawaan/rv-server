@@ -5,6 +5,7 @@ const Tenant = require('./../models/Tenant.model')
 const CreditCard = require('./../models/CreditCard.model')
 const Payment = require('./../models/Payments.model').Payment
 const Reservation = require('./../models/Reservation.model')
+const { getCancelStatus } = require('./../utils/roomStatus')
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 
 router.post('/add_new_card', async (req, res) => {
@@ -65,12 +66,55 @@ router.get('/get_cards', async (req, res) => {
 	}
 })
 
+router.get('/get_trips', async (req, res) => {
+	const { camperId } = req.query
+
+	try {
+		const cancel = await getCancelStatus()
+		const reservations = await Reservation.find({
+			camperId: mongoose.Types.ObjectId(camperId),
+			siteStatusLookupId: {
+				$nin: [cancel.id],
+			},
+		}).populate('tenantId')
+
+		res.status(200).json({
+			reservations,
+		})
+	} catch (err) {
+		console.log(err)
+		res.status(500).json({
+			message: 'Server error.',
+		})
+	}
+})
+
+router.post('/cancel_reservation', async (req, res) => {
+	const { reservationId } = req.body
+	try {
+		const cancel = await getCancelStatus()
+		await Reservation.findByIdAndUpdate(reservationId, {
+			siteStatusLookupId: cancel.id,
+		})
+		res.status(200).json({
+			message: 'Reservation Cancelled.',
+		})
+	} catch (err) {
+		console.log(err)
+		res.status(500).json({
+			message: 'Server error.',
+		})
+	}
+})
+
 router.post('/reserve', async (req, res) => {
 	const { camperId, tenantId, siteId, startDate, endDate, camperCreditCard, notes, createdBy } =
 		req.body
 
 	const tenantAccount = 'acct_1KUFrCR4VvHbKTWm'
-	let site = await Tenant.findOne({}).select({
+	let site = await Tenant.findOne({
+		_id: mongoose.Types.ObjectId(tenantId),
+	}).select({
 		sites: {
 			$elemMatch: {
 				_id: mongoose.Types.ObjectId(siteId),
