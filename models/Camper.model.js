@@ -1,6 +1,17 @@
 const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 
+const OTPSchema = new Schema(
+	{
+		OTP: {
+			type: String,
+		},
+	},
+	{
+		timestamps: true,
+	}
+)
+
 const camperSchema = new Schema(
 	{
 		firstName: {
@@ -41,6 +52,9 @@ const camperSchema = new Schema(
 		},
 		lastLogin: {
 			type: Date,
+		},
+		latestOTP: {
+			type: OTPSchema,
 		},
 	},
 	{
