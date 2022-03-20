@@ -92,7 +92,15 @@ router.post('/generate_otp', async (req, res) => {
 			subject: 'OTP For Reset Password Request',
 			text: `Your OTP is ${OTP}`,
 		}
+
 		transporter.sendMail(mailOptions)
+		// transporter.sendMail(mailOptions, function (error, info) {
+		// 	if (error) {
+		// 		console.log(error)
+		// 	} else {
+		// 		console.log('Email sent: ' + info.response)
+		// 	}
+		// })
 
 		await Camper.findOneAndUpdate(
 			{
@@ -116,57 +124,51 @@ router.post('/generate_otp', async (req, res) => {
 })
 
 router.post('/verify_otp', async (req, res) => {
-	const { email, OTP } = req.body
+	const { email, OTP, password, confirmPassword } = req.body
 
 	try {
 		const camper = await Camper.findOne({
 			email: email,
 		})
-		if (OTP === camper.latestOTP.OTP) {
-			await Camper.findOneAndUpdate(
-				{
-					email: email,
-				},
-				{
-					$unset: {
-						latestOTP: 1,
+
+		if (OTP === camper?.latestOTP?.OTP) {
+			if (password !== confirmPassword)
+				res.status(401).json({
+					message: 'Password and confirm password do not match.',
+				})
+			else {
+				await Camper.findOneAndUpdate(
+					{
+						email: email,
 					},
-				}
-			)
-			res.status(200).json({
-				message: 'OTP verified.',
-			})
+					{
+						$unset: {
+							latestOTP: 1,
+						},
+					}
+				)
+
+				const salt = bcrypt.genSaltSync(10)
+				const passHash = bcrypt.hashSync(password, salt)
+
+				await Camper.findOneAndUpdate(
+					{
+						email: email,
+					},
+					{
+						password: passHash,
+					}
+				)
+
+				res.status(500).json({
+					message: 'Password Reset. Now you can login.',
+				})
+			}
 		} else {
 			res.status(401).json({
 				message: 'OTP not verified.',
 			})
 		}
-	} catch (err) {
-		console.log(err)
-		res.status(500).json({
-			message: 'Server error.',
-		})
-	}
-})
-
-router.post('/reset_password', async (req, res) => {
-	const { email, password } = req.body
-
-	const salt = bcrypt.genSaltSync(10)
-	const passHash = bcrypt.hashSync(password, salt)
-
-	try {
-		await Camper.findOneAndUpdate(
-			{
-				email: email,
-			},
-			{
-				password: passHash,
-			}
-		)
-		res.status(500).json({
-			message: 'Password Reset. Now you can login.',
-		})
 	} catch (err) {
 		console.log(err)
 		res.status(500).json({
