@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs')
 const Camper = require('./../models/Camper.model')
 const { generateOTP } = require('./../utils/auth.util')
 const nodemailer = require('nodemailer')
+const { generateAccessToken } = require('./../utils/auth.util')
 
 router.post('/register_camper', async (req, res) => {
 	const { firstName, lastName, email, address, city, state, zip, phoneNumber, password } =
@@ -25,6 +26,8 @@ router.post('/register_camper', async (req, res) => {
 				zip,
 				phoneNumber,
 				password: passHash,
+				adults: 0,
+				children: 0,
 			})
 			await camper.save()
 			res.status(200).json({
@@ -54,11 +57,13 @@ router.post('/login_camper', async (req, res) => {
 				})
 			} else {
 				camper.password = undefined
-				const accessToken = jwt.sign(camper.toJSON(), process.env.ACCESS_TOKEN_SECRET)
+				const accessToken = generateAccessToken(camper.toJSON())
+				const refreshToken = jwt.sign(camper.toJSON(), process.env.REFRESH_TOKEN_SECRET)
 				res.status(200).json({
 					message: 'Login successful.',
 					camper: camper,
 					accessToken: accessToken,
+					refreshToken: refreshToken,
 				})
 			}
 		} else {
@@ -80,7 +85,10 @@ router.post('/generate_otp', async (req, res) => {
 
 	try {
 		const transporter = nodemailer.createTransport({
-			service: 'gmail',
+			host: 'smtp-mail.outlook.com',
+			port: 587,
+			secure: false,
+			// service: 'gmail',
 			auth: {
 				user: process.env.SUPPORT_EMAIL,
 				pass: process.env.SUPPORT_PASS,
@@ -93,14 +101,11 @@ router.post('/generate_otp', async (req, res) => {
 			text: `Your OTP is ${OTP}`,
 		}
 
-		transporter.sendMail(mailOptions)
-		// transporter.sendMail(mailOptions, function (error, info) {
-		// 	if (error) {
-		// 		console.log(error)
-		// 	} else {
-		// 		console.log('Email sent: ' + info.response)
-		// 	}
-		// })
+		transporter.sendMail(mailOptions, function (error, info) {
+			if (error) {
+				console.log(error)
+			}
+		})
 
 		await Camper.findOneAndUpdate(
 			{
@@ -160,7 +165,7 @@ router.post('/verify_otp', async (req, res) => {
 					}
 				)
 
-				res.status(500).json({
+				res.status(200).json({
 					message: 'Password Reset. Now you can login.',
 				})
 			}
@@ -176,17 +181,6 @@ router.post('/verify_otp', async (req, res) => {
 		})
 	}
 })
-
-const authenticateToken = (req, res, next) => {
-	const authHeader = req.headers['authorization']
-	const token = authHeader && authHeader.split(' ')[1]
-	if (token == null) return res.sendStatus(401)
-	jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, camper) => {
-		if (err) return res.sendStatus(403)
-		req.camper = camper
-		next()
-	})
-}
 
 // Helpers
 const isUniqueCamper = async (email, phoneNumber) => {

@@ -53,6 +53,12 @@ const camperSchema = new Schema(
 		lastLogin: {
 			type: Date,
 		},
+		adults: {
+			type: Number,
+		},
+		children: {
+			type: Number,
+		},
 		latestOTP: {
 			type: OTPSchema,
 		},

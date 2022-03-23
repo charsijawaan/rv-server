@@ -6,9 +6,11 @@ const CreditCard = require('./../models/CreditCard.model')
 const Payment = require('./../models/Payments.model').Payment
 const Reservation = require('./../models/Reservation.model')
 const { getCancelStatus } = require('./../utils/roomStatus')
+const Camper = require('../models/Camper.model')
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
+const { generateAccessToken, authenticateToken } = require('./../utils/auth.util')
 
-router.post('/add_new_card', async (req, res) => {
+router.post('/add_new_card', authenticateToken, async (req, res) => {
 	const {
 		creditCardType,
 		creditCardLastFour,
@@ -49,7 +51,7 @@ router.post('/add_new_card', async (req, res) => {
 	}
 })
 
-router.get('/get_cards', async (req, res) => {
+router.get('/get_cards', authenticateToken, async (req, res) => {
 	const { camperId } = req.query
 	try {
 		const creditCards = await CreditCard.find({
@@ -66,7 +68,7 @@ router.get('/get_cards', async (req, res) => {
 	}
 })
 
-router.get('/get_trips', async (req, res) => {
+router.get('/get_trips', authenticateToken, async (req, res) => {
 	const { camperId } = req.query
 
 	try {
@@ -89,7 +91,7 @@ router.get('/get_trips', async (req, res) => {
 	}
 })
 
-router.post('/cancel_reservation', async (req, res) => {
+router.post('/cancel_reservation', authenticateToken, async (req, res) => {
 	const { reservationId } = req.body
 	try {
 		const cancel = await getCancelStatus()
@@ -107,7 +109,7 @@ router.post('/cancel_reservation', async (req, res) => {
 	}
 })
 
-router.post('/reserve', async (req, res) => {
+router.post('/reserve', authenticateToken, async (req, res) => {
 	const { camperId, tenantId, siteId, startDate, endDate, camperCreditCard, notes, createdBy } =
 		req.body
 
@@ -194,6 +196,40 @@ router.post('/credit_card', async (req, res) => {
 		await CreditCard.findByIdAndDelete(cardId)
 		res.status(200).json({
 			message: 'Card Deleted.',
+		})
+	} catch (err) {
+		console.log(err)
+		res.status(500).json({
+			message: 'Server error.',
+		})
+	}
+})
+
+router.post('/update_adults', authenticateToken, async (req, res) => {
+	const { camperId, adults } = req.body
+	try {
+		await Camper.findByIdAndUpdate(camperId, {
+			adults: adults,
+		})
+		res.status(200).json({
+			message: 'Adults updated.',
+		})
+	} catch (err) {
+		console.log(err)
+		res.status(500).json({
+			message: 'Server error.',
+		})
+	}
+})
+
+router.post('/update_children', authenticateToken, async (req, res) => {
+	const { camperId, children } = req.body
+	try {
+		await Camper.findByIdAndUpdate(camperId, {
+			children: children,
+		})
+		res.status(200).json({
+			message: 'Children updated.',
 		})
 	} catch (err) {
 		console.log(err)
