@@ -49,7 +49,8 @@ router.post('/register_camper', async (req, res) => {
 router.post('/login_camper', async (req, res) => {
 	const { email, password } = req.body
 	try {
-		const camper = await getCamperByEmail(email)
+		let camper = await getCamperByEmail(email)
+		camper = camper.toObject()
 		if (camper) {
 			if (!bcrypt.compareSync(password, camper.password)) {
 				res.status(401).json({
@@ -57,8 +58,8 @@ router.post('/login_camper', async (req, res) => {
 				})
 			} else {
 				camper.password = undefined
-				const accessToken = generateAccessToken(camper.toJSON())
-				const refreshToken = jwt.sign(camper.toJSON(), process.env.REFRESH_TOKEN_SECRET)
+				const accessToken = generateAccessToken(camper)
+				const refreshToken = jwt.sign(camper, process.env.REFRESH_TOKEN_SECRET)
 				res.status(200).json({
 					message: 'Login successful.',
 					camper: camper,

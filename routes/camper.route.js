@@ -8,7 +8,7 @@ const Reservation = require('./../models/Reservation.model')
 const { getCancelStatus } = require('./../utils/roomStatus')
 const Camper = require('../models/Camper.model')
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
-const { generateAccessToken, authenticateToken } = require('./../utils/auth.util')
+const { authenticateToken } = require('./../utils/auth.util')
 
 router.post('/add_new_card', authenticateToken, async (req, res) => {
 	const {
