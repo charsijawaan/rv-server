@@ -87,12 +87,14 @@ router.post('/generate_otp', async (req, res) => {
 	try {
 		const transporter = nodemailer.createTransport({
 			host: 'smtp-mail.outlook.com',
-			port: 587,
 			secure: false,
-			// service: 'gmail',
+			port: 587,
 			auth: {
 				user: process.env.SUPPORT_EMAIL,
 				pass: process.env.SUPPORT_PASS,
+			},
+			tls: {
+				ciphers: 'SSLv3',
 			},
 		})
 		const mailOptions = {
