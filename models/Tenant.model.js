@@ -132,6 +132,28 @@ const tenantAttractions = new Schema(
 	}
 )
 
+const reviewSchema = new Schema(
+	{
+		rating: {
+			type: Number,
+		},
+		comment: {
+			type: String,
+		},
+		camper: {
+			type: mongoose.Types.ObjectId,
+			ref: 'Camper',
+		},
+		reservation: {
+			type: mongoose.Types.ObjectId,
+			ref: 'Reservation',
+		},
+	},
+	{
+		timestamps: true,
+	}
+)
+
 const tenantSchema = new Schema(
 	{
 		isActive: {
@@ -214,6 +236,7 @@ const tenantSchema = new Schema(
 		planTypeLookupId: {
 			type: Number,
 		},
+		reviews: [reviewSchema],
 	},
 	{
 		timestamps: true,

@@ -2,20 +2,6 @@ const mongoose = require('mongoose')
 const paymentSchema = require('./Payments.model').paymentSchema
 const Schema = mongoose.Schema
 
-const reviewSchema = new Schema(
-	{
-		rating: {
-			type: Number,
-		},
-		comment: {
-			type: String,
-		},
-	},
-	{
-		timestamps: true,
-	}
-)
-
 const reservationSchema = new Schema(
 	{
 		tenantId: {
@@ -44,7 +30,6 @@ const reservationSchema = new Schema(
 			type: Number,
 		},
 		payments: [paymentSchema],
-		reviews: [reviewSchema],
 	},
 	{
 		timestamps: true,

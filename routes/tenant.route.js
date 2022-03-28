@@ -50,6 +50,8 @@ router.get('/get_tenant_by_id', async (req, res) => {
 		const tenant = await Tenant.findById({
 			_id: mongoose.Types.ObjectId(tenantId),
 		})
+			.populate('reviews.camper')
+			.populate('reviews.reservation')
 		res.status(200).json({
 			tenant: tenant,
 		})
@@ -77,6 +79,31 @@ router.get('/', async (req, res) => {
 		}
 		res.status(200).json({
 			tenants: filteredTenants,
+		})
+	} catch (err) {
+		console.log(err)
+		res.status(500).json({
+			message: 'Server error.',
+		})
+	}
+})
+
+router.post('/review', async (req, res) => {
+	const { tenantId, rating, comment, camperId, reservationId } = req.body
+
+	try {
+		await Tenant.findByIdAndUpdate(tenantId, {
+			$push: {
+				reviews: {
+					rating: rating,
+					comment: comment,
+					camper: camperId,
+					reservation: reservationId,
+				},
+			},
+		})
+		res.status(200).json({
+			message: 'Review Added.',
 		})
 	} catch (err) {
 		console.log(err)

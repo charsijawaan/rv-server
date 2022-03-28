@@ -26,7 +26,6 @@ app.use('/auth', require('./routes/auth.route'))
 app.use('/tenant', require('./routes/tenant.route'))
 app.use('/camper', require('./routes/camper.route'))
 app.use('/site', require('./routes/site.route'))
-app.use('/reservation', require('./routes/reservation.route'))
 
 app.post('/token', async (req, res) => {
 	const { refreshToken } = req.body
