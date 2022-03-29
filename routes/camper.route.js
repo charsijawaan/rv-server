@@ -175,6 +175,7 @@ router.post('/reserve', authenticateToken, async (req, res) => {
 			notes,
 			createdBy,
 			siteStatusLookupId: 2,
+			isReviewed: false,
 			payments: payment,
 		})
 		await reservation.save()

@@ -29,6 +29,9 @@ const reservationSchema = new Schema(
 		siteStatusLookupId: {
 			type: Number,
 		},
+		isReviewed: {
+			type: Boolean,
+		},
 		payments: [paymentSchema],
 	},
 	{

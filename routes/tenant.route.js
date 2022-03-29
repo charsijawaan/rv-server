@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const mongoose = require('mongoose')
 const Tenant = require('./../models/Tenant.model')
+const Reservation = require('./../models/Reservation.model')
 
 router.post('/', async (req, res) => {
 	const {
@@ -101,6 +102,9 @@ router.post('/review', async (req, res) => {
 					reservation: reservationId,
 				},
 			},
+		})
+		await Reservation.findByIdAndUpdate(reservationId, {
+			isReviewed: true,
 		})
 		res.status(200).json({
 			message: 'Review Added.',
